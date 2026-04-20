@@ -1,0 +1,83 @@
+-- GodzillaClient.lua
+
+local player = game.Players.LocalPlayer
+local char = player.Character or player.CharacterAdded:Wait()
+local hum = char:WaitForChild("Humanoid")
+local hrp = char:WaitForChild("HumanoidRootPart")
+
+local Rep = game:GetService("ReplicatedStorage")
+local UIS = game:GetService("UserInputService")
+
+local AttackEvent = Rep:WaitForChild("GodzillaAttack")
+local SwitchEvent = Rep:WaitForChild("SwitchToR6")
+
+-- Ensure R6
+if hum.RigType ~= Enum.HumanoidRigType.R6 then
+	warn("R6 only system")
+end
+
+--  Roblox Library Sound (Roar style)
+local roar = Instance.new("Sound")
+roar.SoundId = "rbxassetid://138186576" -- monster roar (public)
+roar.Volume = 2
+roar.Parent = hrp
+
+--  Roblox Default R6 Animations
+local attackAnim = Instance.new("Animation")
+attackAnim.AnimationId = "rbxassetid://182393478" -- slash style
+
+local walkAnim = Instance.new("Animation")
+walkAnim.AnimationId = "rbxassetid://180426354" -- default walk
+
+local attackTrack = hum:LoadAnimation(attackAnim)
+local walkTrack = hum:LoadAnimation(walkAnim)
+
+-- Walk animation
+hum.Running:Connect(function(speed)
+	if speed > 0 then
+		if not walkTrack.IsPlaying then
+			walkTrack:Play()
+		end
+	else
+		walkTrack:Stop()
+	end
+end)
+
+-- UI
+local gui = Instance.new("ScreenGui", player.PlayerGui)
+
+local attackBtn = Instance.new("TextButton")
+attackBtn.Size = UDim2.new(0,150,0,60)
+attackBtn.Position = UDim2.new(1,-170,1,-100)
+attackBtn.Text = "ATTACK"
+attackBtn.BackgroundColor3 = Color3.fromRGB(255,80,80)
+attackBtn.TextScaled = true
+attackBtn.Parent = gui
+
+local switchBtn = Instance.new("TextButton")
+switchBtn.Size = UDim2.new(0,150,0,50)
+switchBtn.Position = UDim2.new(0,20,1,-100)
+switchBtn.Text = "SWITCH R6"
+switchBtn.BackgroundColor3 = Color3.fromRGB(80,170,255)
+switchBtn.TextScaled = true
+switchBtn.Parent = gui
+
+-- Attack function
+local function attack()
+	attackTrack:Play()
+	roar:Play()
+	AttackEvent:FireServer(hrp.Position)
+end
+
+attackBtn.MouseButton1Click:Connect(attack)
+
+UIS.InputBegan:Connect(function(input, gp)
+	if gp then return end
+	if input.KeyCode == Enum.KeyCode.E then
+		attack()
+	end
+end)
+
+switchBtn.MouseButton1Click:Connect(function()
+	SwitchEvent:FireServer()
+end)
