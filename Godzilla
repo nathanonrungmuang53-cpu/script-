@@ -1,0 +1,83 @@
+-- Godzilla R6 Client
+local player = game.Players.LocalPlayer
+local char = player.Character or player.CharacterAdded:Wait()
+local hum = char:WaitForChild("Humanoid")
+local hrp = char:WaitForChild("HumanoidRootPart")
+
+local Rep = game:GetService("ReplicatedStorage")
+local UIS = game:GetService("UserInputService")
+
+local Attack = Rep:WaitForChild("GodzillaAttack")
+local SwitchR6 = Rep:WaitForChild("SwitchToR6")
+
+-- เช็ค R6 เท่านั้น
+if hum.RigType ~= Enum.HumanoidRigType.R6 then
+    warn("❌ ต้องเป็น R6 เท่านั้น")
+end
+
+-- 🔊 เสียง
+local roar = Instance.new("Sound", hrp)
+roar.SoundId = "rbxassetid://9125713795"
+roar.Volume = 2
+
+-- 🎬 Animation (R6 เท่านั้น)
+local atkAnim = Instance.new("Animation")
+atkAnim.AnimationId = "rbxassetid://484200742" -- R6 attack
+
+local walkAnim = Instance.new("Animation")
+walkAnim.AnimationId = "rbxassetid://180426354" -- R6 walk
+
+local atkTrack = hum:LoadAnimation(atkAnim)
+local walkTrack = hum:LoadAnimation(walkAnim)
+
+hum.Running:Connect(function(speed)
+    if speed > 0 then
+        if not walkTrack.IsPlaying then
+            walkTrack:Play()
+        end
+    else
+        walkTrack:Stop()
+    end
+end)
+
+-- 🖥️ UI
+local gui = Instance.new("ScreenGui", player.PlayerGui)
+
+-- ปุ่มโจมตี
+local atkBtn = Instance.new("TextButton")
+atkBtn.Size = UDim2.new(0,150,0,60)
+atkBtn.Position = UDim2.new(1,-170,1,-100)
+atkBtn.Text = "ATTACK"
+atkBtn.BackgroundColor3 = Color3.fromRGB(255,80,80)
+atkBtn.TextScaled = true
+atkBtn.Parent = gui
+
+-- ปุ่มเปลี่ยน R6
+local r6Btn = Instance.new("TextButton")
+r6Btn.Size = UDim2.new(0,150,0,50)
+r6Btn.Position = UDim2.new(0,20,1,-100)
+r6Btn.Text = "SWITCH R6"
+r6Btn.BackgroundColor3 = Color3.fromRGB(80,170,255)
+r6Btn.TextScaled = true
+r6Btn.Parent = gui
+
+-- 🎯 โจมตี
+local function attack()
+    atkTrack:Play()
+    roar:Play()
+    Attack:FireServer(hrp.Position)
+end
+
+atkBtn.MouseButton1Click:Connect(attack)
+
+UIS.InputBegan:Connect(function(input,gp)
+    if gp then return end
+    if input.KeyCode == Enum.KeyCode.E then
+        attack()
+    end
+end)
+
+-- 🔁 เปลี่ยน R6
+r6Btn.MouseButton1Click:Connect(function()
+    SwitchR6:FireServer()
+end)
