@@ -1,0 +1,51 @@
+-- GodzillaServer.lua
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+-- Create RemoteEvents
+local AttackEvent = Instance.new("RemoteEvent")
+AttackEvent.Name = "GodzillaAttack"
+AttackEvent.Parent = ReplicatedStorage
+
+local SwitchEvent = Instance.new("RemoteEvent")
+SwitchEvent.Name = "SwitchToR6"
+SwitchEvent.Parent = ReplicatedStorage
+
+-- Force R6 on spawn
+Players.PlayerAdded:Connect(function(player)
+	player.CharacterAppearanceLoaded:Connect(function(character)
+		local humanoid = character:WaitForChild("Humanoid")
+		humanoid.RigType = Enum.HumanoidRigType.R6
+	end)
+end)
+
+-- Switch to R6 button
+SwitchEvent.OnServerEvent:Connect(function(player)
+	player:LoadCharacter()
+end)
+
+-- Attack system (damage + knockback)
+AttackEvent.OnServerEvent:Connect(function(player, position)
+	for _, otherPlayer in pairs(Players:GetPlayers()) do
+		if otherPlayer ~= player and otherPlayer.Character then
+			
+			local hrp = otherPlayer.Character:FindFirstChild("HumanoidRootPart")
+			local humanoid = otherPlayer.Character:FindFirstChild("Humanoid")
+
+			if hrp and humanoid then
+				local distance = (hrp.Position - position).Magnitude
+				
+				if distance <= 18 then
+					local direction = (hrp.Position - position).Unit
+					
+					-- Knockback
+					hrp.Velocity = direction * 100 + Vector3.new(0, 50, 0)
+					
+					-- Damage
+					humanoid:TakeDamage(25)
+				end
+			end
+		end
+	end
+end)
